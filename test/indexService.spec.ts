@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'bun:test';
-import setIndex from '../src/indexService';
+import { describe, expect, it } from "bun:test";
+import setIndex from "../src/indexService";
 
-describe('indexService', () => {
-  describe('setIndex()', () => {
-    it('should return incrementing numbers starting from 1', () => {
+describe("indexService", () => {
+  describe("setIndex()", () => {
+    it("should return incrementing numbers starting from 1", () => {
       // Note: This test relies on module state, so the starting number
       // depends on previous calls in other tests. We test that it increments.
       const first = setIndex();
@@ -14,9 +14,9 @@ describe('indexService', () => {
       expect(third).toBe(second + 1);
     });
 
-    it('should always return a number', () => {
+    it("should always return a number", () => {
       const result = setIndex();
-      expect(typeof result).toBe('number');
+      expect(typeof result).toBe("number");
     });
   });
 });

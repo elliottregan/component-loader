@@ -1,8 +1,8 @@
-import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
-import runIdleQueue from '../src/idle-queue';
-import type { RegistryEntry } from '../src/types';
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import runIdleQueue from "../src/idle-queue";
+import type { RegistryEntry } from "../src/types";
 
-describe('runIdleQueue', () => {
+describe("runIdleQueue", () => {
   let originalRequestIdleCallback: typeof window.requestIdleCallback | undefined;
   let originalRequestAnimationFrame: typeof window.requestAnimationFrame;
 
@@ -22,14 +22,14 @@ describe('runIdleQueue', () => {
       id,
       loaded: false,
       element: {} as HTMLElement,
-      Component: {} as RegistryEntry['Component'],
+      Component: {} as RegistryEntry["Component"],
     };
   }
 
-  it('should call bindFn for each entry', async () => {
+  it("should call bindFn for each entry", async () => {
     const bindFn = mock(() => {});
     const doneFn = mock(() => {});
-    const entries = [createMockEntry('1'), createMockEntry('2'), createMockEntry('3')];
+    const entries = [createMockEntry("1"), createMockEntry("2"), createMockEntry("3")];
 
     // @ts-expect-error - mocking
     window.requestIdleCallback = (cb: () => void) => {
@@ -44,10 +44,10 @@ describe('runIdleQueue', () => {
     expect(bindFn).toHaveBeenCalledTimes(3);
   });
 
-  it('should call doneFn after the last entry is processed', async () => {
+  it("should call doneFn after the last entry is processed", async () => {
     const bindFn = mock(() => {});
     const doneFn = mock(() => {});
-    const entries = [createMockEntry('1'), createMockEntry('2')];
+    const entries = [createMockEntry("1"), createMockEntry("2")];
 
     // @ts-expect-error - mocking
     window.requestIdleCallback = (cb: () => void) => {
@@ -62,7 +62,7 @@ describe('runIdleQueue', () => {
     expect(doneFn).toHaveBeenCalledTimes(1);
   });
 
-  it('should use requestIdleCallback when available', async () => {
+  it("should use requestIdleCallback when available", async () => {
     const idleCallback = mock((cb: () => void) => {
       setTimeout(cb, 0);
       return 1;
@@ -70,14 +70,18 @@ describe('runIdleQueue', () => {
     // @ts-expect-error - mocking
     window.requestIdleCallback = idleCallback;
 
-    const entries = [createMockEntry('1')];
+    const entries = [createMockEntry("1")];
 
-    runIdleQueue(entries, () => {}, () => {});
+    runIdleQueue(
+      entries,
+      () => {},
+      () => {},
+    );
 
     expect(idleCallback).toHaveBeenCalled();
   });
 
-  it('should fall back to requestAnimationFrame when requestIdleCallback is unavailable', async () => {
+  it("should fall back to requestAnimationFrame when requestIdleCallback is unavailable", async () => {
     // @ts-expect-error - simulating browser without requestIdleCallback
     window.requestIdleCallback = undefined;
 
@@ -88,19 +92,23 @@ describe('runIdleQueue', () => {
     // @ts-expect-error - mocking
     window.requestAnimationFrame = rafCallback;
 
-    const entries = [createMockEntry('1')];
+    const entries = [createMockEntry("1")];
 
-    runIdleQueue(entries, () => {}, () => {});
+    runIdleQueue(
+      entries,
+      () => {},
+      () => {},
+    );
 
     expect(rafCallback).toHaveBeenCalled();
   });
 
-  it('should pass correct entry to bindFn', async () => {
+  it("should pass correct entry to bindFn", async () => {
     const capturedEntries: RegistryEntry[] = [];
     const bindFn = (entry: RegistryEntry) => {
       capturedEntries.push(entry);
     };
-    const entries = [createMockEntry('a'), createMockEntry('b')];
+    const entries = [createMockEntry("a"), createMockEntry("b")];
 
     // @ts-expect-error - mocking
     window.requestIdleCallback = (cb: () => void) => {
@@ -115,7 +123,7 @@ describe('runIdleQueue', () => {
     expect(capturedEntries).toEqual(entries);
   });
 
-  it('should not call doneFn for empty queue', () => {
+  it("should not call doneFn for empty queue", () => {
     const doneFn = mock(() => {});
 
     runIdleQueue([], () => {}, doneFn);

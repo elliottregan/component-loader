@@ -1,4 +1,4 @@
-import type { RunInViewOptions } from './types';
+import type { RunInViewOptions } from "./types";
 
 const DEFAULTS: Required<RunInViewOptions> = {
   threshold: [0, 1],
@@ -12,7 +12,7 @@ const DEFAULTS: Required<RunInViewOptions> = {
 export default function runInView(
   element: HTMLElement,
   fn: (entry: IntersectionObserverEntry | { target: HTMLElement }) => void = () => {},
-  options?: RunInViewOptions
+  options?: RunInViewOptions,
 ): IntersectionObserver | number {
   if (!window.IntersectionObserver) {
     return requestAnimationFrame(() => fn({ target: element }));
@@ -33,7 +33,7 @@ export default function runInView(
     },
     {
       threshold: thisOptions.threshold,
-    }
+    },
   );
 
   observer.observe(element);
@@ -42,7 +42,7 @@ export default function runInView(
 
 function meetsThreshold(
   { intersectionRatio, isIntersecting }: IntersectionObserverEntry,
-  options: Required<RunInViewOptions>
+  options: Required<RunInViewOptions>,
 ): boolean {
   // Under rare conditions,
   // `intersectionRatio === 0` while `isIntersecting === true`.

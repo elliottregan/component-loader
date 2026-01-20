@@ -1,4 +1,4 @@
-import type { RegistryEntry } from './types';
+import type { RegistryEntry } from "./types";
 
 /**
  * Processes a queue of registry entries during browser idle time.
@@ -7,7 +7,7 @@ import type { RegistryEntry } from './types';
 export default function runIdleQueue(
   entries: RegistryEntry[],
   bindFn: (entry: RegistryEntry) => void,
-  doneFn: () => void
+  doneFn: () => void,
 ): void {
   const lastIndex = entries.length - 1;
 

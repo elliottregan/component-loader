@@ -1,8 +1,8 @@
 /**
  * Test setup - preloaded before each test file
  */
-import { setupGlobalMocks, resetMocks } from './mocks/dom';
-import { beforeEach, afterEach } from 'bun:test';
+import { afterEach, beforeEach } from "bun:test";
+import { resetMocks, setupGlobalMocks } from "./mocks/dom";
 
 // Initialize global mocks
 setupGlobalMocks();

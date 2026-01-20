@@ -16,12 +16,12 @@ This report documents the refactoring of `loader.ts` in the `@elliottregan/compo
 
 ### Code Quality Issues Found
 
-| Issue | Location | Severity |
-|-------|----------|----------|
-| Dead code: `_addToQueue()` method | lines 95-97 | Low |
-| Misleading name: `_getComponentsBySelector()` actually retrieved by ID | line 122 | Low |
-| Duplicated idle/RAF branching logic | lines 101-119 | Medium |
-| Mixed concerns in single class | throughout | Medium |
+| Issue                                                                  | Location      | Severity |
+| ---------------------------------------------------------------------- | ------------- | -------- |
+| Dead code: `_addToQueue()` method                                      | lines 95-97   | Low      |
+| Misleading name: `_getComponentsBySelector()` actually retrieved by ID | line 122      | Low      |
+| Duplicated idle/RAF branching logic                                    | lines 101-119 | Medium   |
+| Mixed concerns in single class                                         | throughout    | Medium   |
 
 ## Refactoring Approach
 
@@ -32,6 +32,7 @@ We extracted two cohesive modules:
 **1. PubSub class (`src/pubsub.ts`)**
 
 Encapsulates the subscription management pattern:
+
 - `subscribe()` - Register callbacks with context
 - `unsubscribe()` - Remove subscriptions by callback, context, or both
 - `publish()` - Broadcast to subscribers, excluding origin
@@ -39,6 +40,7 @@ Encapsulates the subscription management pattern:
 **2. runIdleQueue helper (`src/idle-queue.ts`)**
 
 Consolidates the idle callback logic:
+
 - Unified handling of `requestIdleCallback` with `requestAnimationFrame` fallback
 - Cleaner iteration with completion callback
 - Eliminated duplicated branching structure
@@ -46,49 +48,55 @@ Consolidates the idle callback logic:
 ### Dead Code Removal
 
 **`_addToQueue()` method (lines 95-97)**
+
 ```typescript
 private _addToQueue(...args: unknown[]): void {
   this.#idleQueue.push({ args } as unknown as RegistryEntry);
 }
 ```
+
 This method was never called anywhere in the codebase. It also had a suspicious type cast (`as unknown as RegistryEntry`) suggesting it was either incomplete or abandoned. Removed entirely.
 
 **`_getComponentsBySelector()` method (line 122)**
+
 ```typescript
 private _getComponentsBySelector(selector: string): RegistryEntry | undefined {
   return this.#registry.get(selector);
 }
 ```
+
 Despite its name suggesting selector-based lookup, this was a simple ID-based registry access. It was never called externally or internally. Removed as unnecessary indirection.
 
 ## Results
 
 ### File Size Comparison
 
-| File | Before | After | Change |
-|------|--------|-------|--------|
-| loader.ts | 196 | 137 | -30% |
-| pubsub.ts | - | 58 | new |
-| idle-queue.ts | - | 28 | new |
-| **Total** | 196 | 223 | +14% |
+| File          | Before | After | Change |
+| ------------- | ------ | ----- | ------ |
+| loader.ts     | 196    | 137   | -30%   |
+| pubsub.ts     | -      | 58    | new    |
+| idle-queue.ts | -      | 28    | new    |
+| **Total**     | 196    | 223   | +14%   |
 
 The total line count increased slightly, but this reflects proper separation of concerns with explicit interfaces rather than implicit coupling.
 
 ### Test Coverage
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Test files | 5 | 7 |
-| Test cases | 41 | 58 |
-| Assertions | 70 | 88 |
+| Metric     | Before | After |
+| ---------- | ------ | ----- |
+| Test files | 5      | 7     |
+| Test cases | 41     | 58    |
+| Assertions | 70     | 88    |
 
 New test files provide focused coverage:
+
 - `test/pubsub.spec.ts` - 10 tests covering subscribe, publish, unsubscribe edge cases
 - `test/idle-queue.spec.ts` - 6 tests covering RAF fallback, completion callbacks
 
 ### Verification
 
 All quality gates passed:
+
 - `bun test` - 58 tests, 0 failures
 - `bun run build` - Successful bundle generation
 - `bunx tsc --noEmit` - No type errors
@@ -96,6 +104,7 @@ All quality gates passed:
 ## Architecture Improvements
 
 ### Before
+
 ```
 ComponentLoader
 ├── Registry management (Map operations)
@@ -105,6 +114,7 @@ ComponentLoader
 ```
 
 ### After
+
 ```
 ComponentLoader
 ├── Registry management (Map operations)
@@ -122,6 +132,7 @@ runIdleQueue (standalone)
 ## Public API Impact
 
 **No breaking changes.** The `ComponentLoader` class maintains identical public methods:
+
 - `subscribe()`
 - `unsubscribe()`
 - `publish()`

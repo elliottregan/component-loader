@@ -8,7 +8,7 @@ export interface MockElement {
   querySelectorAll: (selector: string) => MockElement[];
   querySelector: (selector: string) => MockElement | null;
   children?: MockElement[];
-  _selector?: string;
+  mockSelector?: string;
 }
 
 export interface MockIntersectionObserverEntry {
@@ -21,7 +21,9 @@ type IntersectionCallback = (entries: MockIntersectionObserverEntry[]) => void;
 
 export class MockIntersectionObserver {
   private callback: IntersectionCallback;
+
   private elements: Set<MockElement> = new Set();
+
   static instances: MockIntersectionObserver[] = [];
 
   constructor(callback: IntersectionCallback) {
@@ -61,28 +63,28 @@ export class MockDocumentFragment {
   querySelector(selector: string): MockElement | null {
     // Validate selector syntax by checking for common invalid patterns
     // This mimics browser behavior of throwing on invalid selectors
-    if (selector.includes('..') || selector.match(/^[.#]\s*$/) || selector === '') {
-      throw new DOMException('Invalid selector');
+    if (selector.includes("..") || selector.match(/^[.#]\s*$/) || selector === "") {
+      throw new DOMException("Invalid selector");
     }
     return null;
   }
 }
 
 export function createMockElement(
-  tagName = 'DIV',
+  tagName = "DIV",
   children: MockElement[] = [],
-  selector?: string
+  selector?: string,
 ): MockElement {
   const element: MockElement = {
     tagName,
     children,
-    _selector: selector,
+    mockSelector: selector,
     querySelectorAll(sel: string): MockElement[] {
       // Return children that match the selector (simplified matching)
-      return children.filter((child) => child._selector === sel);
+      return children.filter((child) => child.mockSelector === sel);
     },
     querySelector(sel: string): MockElement | null {
-      return children.find((child) => child._selector === sel) || null;
+      return children.find((child) => child.mockSelector === sel) || null;
     },
   };
   return element;
@@ -116,11 +118,13 @@ export function createMockWindow(): {
     requestIdleCallback: (cb: () => void) => {
       // Execute callback synchronously for testing
       setTimeout(cb, 0);
-      return ++idleCallbackId;
+      idleCallbackId += 1;
+      return idleCallbackId;
     },
     requestAnimationFrame: (cb: () => void) => {
       setTimeout(cb, 0);
-      return ++rafId;
+      rafId += 1;
+      return rafId;
     },
   };
 }

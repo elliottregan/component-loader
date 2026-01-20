@@ -16,12 +16,14 @@ This is a browser component loading system (`@elliottregan/component-loader`) th
 ### Core Classes
 
 **Component** (`src/index.ts`) - Base class that all user components extend:
+
 - Static `loaderPriority` controls when the component initializes (`'high'`, `'idle'`, `'in-view'`)
 - Static `selector` (required) - CSS selector to find DOM elements
 - Provides pub/sub methods (`$publish`, `$subscribe`, `$unsubscribe`) for inter-component communication
 - Each instance gets a unique `$id` and reference to its DOM element via `$container`
 
 **ComponentLoader** (`src/loader.ts`) - Orchestrates component initialization:
+
 - Takes a container element and array of Component classes
 - Maintains a registry (Map) of all component entries
 - Three loading strategies:

@@ -4,13 +4,13 @@ This document reviews the process of converting the component-loader library fro
 
 ## Overview
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Language | JavaScript (ES6+) | TypeScript |
-| Runtime/Package Manager | Node.js/npm | Bun |
-| Build Tool | Babel | Bun build |
-| Test Runner | Jest | Bun test |
-| Type Checking | None | TypeScript strict mode |
+| Aspect                  | Before            | After                  |
+| ----------------------- | ----------------- | ---------------------- |
+| Language                | JavaScript (ES6+) | TypeScript             |
+| Runtime/Package Manager | Node.js/npm       | Bun                    |
+| Build Tool              | Babel             | Bun build              |
+| Test Runner             | Jest              | Bun test               |
+| Type Checking           | None              | TypeScript strict mode |
 
 ## Issues Addressed
 
@@ -64,7 +64,7 @@ unsubscribe(subscription, callback?, context?) {
 ```javascript
 // Before (caused circular reference)
 Object.assign(entry, {
-  instance: load(entry),  // load() returns entry, not instance
+  instance: load(entry), // load() returns entry, not instance
   loaded: true,
 });
 
@@ -80,11 +80,13 @@ load(entry);
 ### 1. DOM Mocking for Browser APIs
 
 **Challenge:** The source code uses browser-only APIs that don't exist in Bun's test environment:
+
 - `document.createDocumentFragment().querySelector()` for selector validation
 - `window.requestIdleCallback` / `requestAnimationFrame` for deferred loading
 - `IntersectionObserver` for lazy loading
 
 **Solution:** Created comprehensive mocks in `test/mocks/dom.ts`:
+
 - `MockDocumentFragment` - Validates CSS selectors
 - `MockIntersectionObserver` - Simulates viewport intersection with test helpers
 - `createMockWindow()` - Provides `requestIdleCallback`/`requestAnimationFrame` that execute synchronously via `setTimeout`
@@ -94,6 +96,7 @@ load(entry);
 **Challenge:** Mock objects don't fully implement HTMLElement (310+ properties), causing type errors.
 
 **Solution:** Used type assertions at call sites:
+
 ```typescript
 // Helper function for clean type casting
 export function asHTMLElement(el: MockElement): HTMLElement {
@@ -106,6 +109,7 @@ export function asHTMLElement(el: MockElement): HTMLElement {
 **Challenge:** Initial `tsconfig.json` had `rootDir: "./src"` but tests in `test/` were included, causing TS6059 errors.
 
 **Solution:** Created separate configs:
+
 - `tsconfig.json` - For type checking (includes both src/ and test/)
 - `tsconfig.build.json` - For building (extends base, sets `rootDir: "./src"`, excludes test/)
 
@@ -114,6 +118,7 @@ export function asHTMLElement(el: MockElement): HTMLElement {
 **Challenge:** Defining a type for Component class constructors that includes both static and instance members.
 
 **Solution:** Created explicit interface in `types.ts`:
+
 ```typescript
 export interface ComponentConstructor {
   new (element: HTMLElement, options: ComponentOptions, loaderInstance: ComponentLoader): Component;
@@ -125,33 +130,34 @@ export interface ComponentConstructor {
 
 ## Files Changed
 
-| Action | File |
-|--------|------|
-| Deleted | `babel.config.json` |
-| Deleted | `jest-config.json` |
-| Created | `bunfig.toml` |
-| Created | `tsconfig.json` |
-| Created | `tsconfig.build.json` |
-| Modified | `package.json` |
-| Created | `test/setup.ts` |
-| Created | `test/mocks/dom.ts` |
-| Created | `test/util.spec.ts` |
-| Created | `test/indexService.spec.ts` |
-| Created | `test/registry.spec.ts` |
-| Created | `test/index.spec.ts` |
-| Created | `test/loader.spec.ts` |
-| Created | `src/types.ts` |
-| Converted | `src/util.js` → `src/util.ts` |
+| Action    | File                                          |
+| --------- | --------------------------------------------- |
+| Deleted   | `babel.config.json`                           |
+| Deleted   | `jest-config.json`                            |
+| Created   | `bunfig.toml`                                 |
+| Created   | `tsconfig.json`                               |
+| Created   | `tsconfig.build.json`                         |
+| Modified  | `package.json`                                |
+| Created   | `test/setup.ts`                               |
+| Created   | `test/mocks/dom.ts`                           |
+| Created   | `test/util.spec.ts`                           |
+| Created   | `test/indexService.spec.ts`                   |
+| Created   | `test/registry.spec.ts`                       |
+| Created   | `test/index.spec.ts`                          |
+| Created   | `test/loader.spec.ts`                         |
+| Created   | `src/types.ts`                                |
+| Converted | `src/util.js` → `src/util.ts`                 |
 | Converted | `src/indexService.js` → `src/indexService.ts` |
-| Converted | `src/registry.js` → `src/registry.ts` |
-| Converted | `src/run-in-view.js` → `src/run-in-view.ts` |
-| Converted | `src/loader.js` → `src/loader.ts` |
-| Converted | `src/index.js` → `src/index.ts` |
-| Updated | `CLAUDE.md` |
+| Converted | `src/registry.js` → `src/registry.ts`         |
+| Converted | `src/run-in-view.js` → `src/run-in-view.ts`   |
+| Converted | `src/loader.js` → `src/loader.ts`             |
+| Converted | `src/index.js` → `src/index.ts`               |
+| Updated   | `CLAUDE.md`                                   |
 
 ## Test Coverage
 
 41 tests across 5 test files covering:
+
 - Utility functions (id generation, selector validation)
 - Index service (incrementing counter)
 - Registry (entry creation, component binding)

@@ -1,8 +1,7 @@
-import { isValidSelector } from './util';
-import runInView from './run-in-view';
-import runIdleQueue from './idle-queue';
-import PubSub from './pubsub';
-import { bindComponent, createRegistryEntry } from './registry';
+import runIdleQueue from "./idle-queue";
+import PubSub from "./pubsub";
+import { bindComponent, createRegistryEntry } from "./registry";
+import runInView from "./run-in-view";
 import type {
   ComponentConstructor,
   ComponentInput,
@@ -10,17 +9,22 @@ import type {
   IdleQueueDoneCallback,
   LoaderPriority,
   RegistryEntry,
-  SubscriptionCallback,
   SubscriberContext,
-} from './types';
+  SubscriptionCallback,
+} from "./types";
+import { isValidSelector } from "./util";
 
 type LoaderFunction = (entry: RegistryEntry, queue?: RegistryEntry[]) => void;
 
 export default class ComponentLoader {
   #idleQueue: RegistryEntry[] = [];
+
   #pubsub = new PubSub();
+
   #idleQueueDoneCallback: IdleQueueDoneCallback;
+
   #container: HTMLElement;
+
   #registry = new Map<string, RegistryEntry>();
 
   #loaders: Record<LoaderPriority, LoaderFunction> = {
@@ -28,7 +32,7 @@ export default class ComponentLoader {
     idle: (entry, queue) => {
       queue?.push(entry);
     },
-    'in-view': (entry) => {
+    "in-view": (entry) => {
       runInView(entry.element, () => bindComponent(entry, this));
     },
   };
@@ -36,38 +40,35 @@ export default class ComponentLoader {
   constructor(
     container: HTMLElement,
     components: ComponentInput[],
-    idleQueueDoneCallback: IdleQueueDoneCallback = () => {}
+    idleQueueDoneCallback: IdleQueueDoneCallback = () => {},
   ) {
     this.#container = container;
     this.#idleQueueDoneCallback = idleQueueDoneCallback;
 
     components.forEach((comp) => {
       if (Array.isArray(comp)) {
-        this._registerComponent(comp[0], comp[1]);
+        this.registerComponent(comp[0], comp[1]);
       } else {
-        this._registerComponent(comp);
+        this.registerComponent(comp);
       }
     });
-    this._loadAll();
-    this._runIdleQueue();
+    this.loadAll();
+    this.runIdleQueue();
   }
 
-  private _registerComponent(
-    Component: ComponentConstructor,
-    options?: ComponentOptions
-  ): void {
+  private registerComponent(Component: ComponentConstructor, options?: ComponentOptions): void {
     if (!isValidComponent(Component)) return;
     this.#container
       .querySelectorAll(Component.selector)
-      .forEach((element) =>
-        this._addToRegistry(element as HTMLElement, Component, options)
-      );
+      .forEach((element) => {
+        this.addToRegistry(element as HTMLElement, Component, options);
+      });
   }
 
-  private _addToRegistry(
+  private addToRegistry(
     element: HTMLElement,
     Component: ComponentConstructor,
-    options?: ComponentOptions
+    options?: ComponentOptions,
   ): void {
     const entry = createRegistryEntry(element, Component, options);
     this.#registry.set(entry.id, entry);
@@ -76,30 +77,32 @@ export default class ComponentLoader {
   loadComponent(entry: RegistryEntry): void {
     if (!entry) return;
     const load = this.getLoader(entry.Component.loaderPriority);
-    if (entry.Component.loaderPriority === 'idle') {
+    if (entry.Component.loaderPriority === "idle") {
       load(entry, this.#idleQueue);
-      entry.loaded = 'pending';
+      entry.loaded = "pending";
     } else {
       load(entry);
     }
   }
 
-  private _loadAll(): void {
-    [...this.#registry.values()].forEach((entry) => this.loadComponent(entry));
+  private loadAll(): void {
+    [...this.#registry.values()].forEach((entry) => {
+      this.loadComponent(entry);
+    });
   }
 
-  private _runIdleQueue(): void {
+  private runIdleQueue(): void {
     runIdleQueue(
       this.#idleQueue,
       (entry) => bindComponent(entry, this),
-      this.#idleQueueDoneCallback
+      this.#idleQueueDoneCallback,
     );
   }
 
   subscribe(
     subscription: string,
     callback: SubscriptionCallback,
-    context: SubscriberContext
+    context: SubscriberContext,
   ): void {
     this.#pubsub.subscribe(subscription, callback, context);
   }
@@ -107,7 +110,7 @@ export default class ComponentLoader {
   unsubscribe(
     subscription: string,
     callback?: SubscriptionCallback,
-    context?: SubscriberContext
+    context?: SubscriberContext,
   ): boolean {
     return this.#pubsub.unsubscribe(subscription, callback, context);
   }
@@ -129,7 +132,7 @@ function isValidComponent(Component: ComponentConstructor): boolean {
   if (!isValidSelector(Component.selector)) {
     console.error(
       `ComponentLoader: The Component subclass, '${Component.name}', needs a valid 'selector' property.`,
-      Component
+      Component,
     );
     return false;
   }

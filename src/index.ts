@@ -1,22 +1,26 @@
-import ComponentLoader from './loader';
-import setIndex from './indexService';
-import type { ComponentOptions, LoaderPriority, SubscriptionCallback } from './types';
+import setIndex from "./indexService";
+import ComponentLoader from "./loader";
+import type { ComponentOptions, LoaderPriority, SubscriptionCallback } from "./types";
 
 export default class Component {
-  static loaderPriority: LoaderPriority = 'idle';
+  static loaderPriority: LoaderPriority = "idle";
+
   static loaderPriorityDelay = 0;
+
   static selector: string;
 
   #loaderInstance: ComponentLoader;
 
   $id: string;
+
   $container: HTMLElement;
+
   $options: ComponentOptions;
 
   constructor(
     element: HTMLElement,
     options: ComponentOptions = {},
-    loaderInstance: ComponentLoader
+    loaderInstance: ComponentLoader,
   ) {
     this.$id = `$id_${setIndex()}`;
     this.$container = element;
@@ -58,4 +62,4 @@ export type {
   SubscriberContext,
   Subscription,
   SubscriptionCallback,
-} from './types';
+} from "./types";

@@ -2,11 +2,11 @@
  * Shared type definitions for the component-loader library
  */
 
-import type Component from './index';
-import type ComponentLoader from './loader';
+import type Component from "./index";
+import type ComponentLoader from "./loader";
 
 /** Loading priority for components */
-export type LoaderPriority = 'high' | 'idle' | 'in-view';
+export type LoaderPriority = "high" | "idle" | "in-view";
 
 /** Constructor type for Component subclasses */
 export interface ComponentConstructor {
@@ -22,7 +22,7 @@ export type ComponentOptions = Record<string, unknown>;
 /** Registry entry for a component */
 export interface RegistryEntry {
   id: string;
-  loaded: boolean | 'pending';
+  loaded: boolean | "pending";
   element: HTMLElement;
   Component: ComponentConstructor;
   options?: ComponentOptions;
