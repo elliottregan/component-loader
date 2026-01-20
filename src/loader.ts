@@ -1,24 +1,24 @@
 import { isValidSelector } from './util';
 import runInView from './run-in-view';
+import runIdleQueue from './idle-queue';
+import PubSub from './pubsub';
 import { bindComponent, createRegistryEntry } from './registry';
 import type {
   ComponentConstructor,
   ComponentInput,
   ComponentOptions,
-  ComponentWithOptions,
   IdleQueueDoneCallback,
   LoaderPriority,
   RegistryEntry,
-  Subscription,
   SubscriptionCallback,
   SubscriberContext,
 } from './types';
 
-type LoaderFunction = (entry: RegistryEntry, queue?: RegistryEntry[]) => RegistryEntry | void;
+type LoaderFunction = (entry: RegistryEntry, queue?: RegistryEntry[]) => void;
 
 export default class ComponentLoader {
   #idleQueue: RegistryEntry[] = [];
-  #subscriptions: Record<string, Subscription[]> = {};
+  #pubsub = new PubSub();
   #idleQueueDoneCallback: IdleQueueDoneCallback;
   #container: HTMLElement;
   #registry = new Map<string, RegistryEntry>();
@@ -52,9 +52,6 @@ export default class ComponentLoader {
     this._runIdleQueue();
   }
 
-  /**
-   * Binds a component to the DOM, and registers the instance
-   */
   private _registerComponent(
     Component: ComponentConstructor,
     options?: ComponentOptions
@@ -84,7 +81,6 @@ export default class ComponentLoader {
       entry.loaded = 'pending';
     } else {
       load(entry);
-      // Note: bindComponent sets loaded=true and instance on entry
     }
   }
 
@@ -92,35 +88,12 @@ export default class ComponentLoader {
     [...this.#registry.values()].forEach((entry) => this.loadComponent(entry));
   }
 
-  private _addToQueue(...args: unknown[]): void {
-    this.#idleQueue.push({ args } as unknown as RegistryEntry);
-  }
-
   private _runIdleQueue(): void {
-    this.#idleQueue.forEach((entry, i) => {
-      if (!window.requestIdleCallback) {
-        window.requestAnimationFrame(() => {
-          bindComponent(entry, this);
-          if (i === this.#idleQueue.length - 1) {
-            this.#idleQueueDoneCallback();
-          }
-        });
-      } else {
-        window.requestIdleCallback(
-          () => {
-            bindComponent(entry, this);
-            if (i === this.#idleQueue.length - 1) {
-              this.#idleQueueDoneCallback();
-            }
-          },
-          { timeout: 4000 }
-        );
-      }
-    });
-  }
-
-  private _getComponentsBySelector(selector: string): RegistryEntry | undefined {
-    return this.#registry.get(selector);
+    runIdleQueue(
+      this.#idleQueue,
+      (entry) => bindComponent(entry, this),
+      this.#idleQueueDoneCallback
+    );
   }
 
   subscribe(
@@ -128,10 +101,7 @@ export default class ComponentLoader {
     callback: SubscriptionCallback,
     context: SubscriberContext
   ): void {
-    if (!this.#subscriptions[subscription]) {
-      this.#subscriptions[subscription] = [];
-    }
-    this.#subscriptions[subscription].push({ context, callback });
+    this.#pubsub.subscribe(subscription, callback, context);
   }
 
   unsubscribe(
@@ -139,39 +109,11 @@ export default class ComponentLoader {
     callback?: SubscriptionCallback,
     context?: SubscriberContext
   ): boolean {
-    if (!this.#subscriptions[subscription]) {
-      console.warn(`The subscription '${subscription}' doesn't exist.`);
-      return false;
-    }
-
-    // Remove matching subscriptions
-    this.#subscriptions[subscription] = this.#subscriptions[subscription].filter(
-      (sub) => {
-        if (callback && context) {
-          return sub.callback !== callback || sub.context !== context;
-        }
-        if (callback) {
-          return sub.callback !== callback;
-        }
-        if (context) {
-          return sub.context !== context;
-        }
-        return false; // Remove all if no filter specified
-      }
-    );
-
-    return true;
+    return this.#pubsub.unsubscribe(subscription, callback, context);
   }
 
   publish(subscription: string, originId: string, ...args: unknown[]): boolean {
-    if (!this.#subscriptions[subscription]) return false;
-    this.#subscriptions[subscription].forEach((sub) => {
-      // Don't pass the message to the origin component
-      if (sub.context.$id === originId) return;
-      sub.callback.apply(sub.context, args);
-    });
-
-    return true;
+    return this.#pubsub.publish(subscription, originId, ...args);
   }
 
   getRegistry(): Map<string, RegistryEntry> {
