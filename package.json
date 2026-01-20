@@ -1,0 +1,31 @@
+{
+  "name": "@elliottregan/component-loader",
+  "version": "0.5.7",
+  "description": "A component loading system for reducing bottlenecks in the browser.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser && bun run build:types",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --declaration --declarationMap --outDir ./dist",
+    "test": "bun test",
+    "prepublish": "bun run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elliottregan/component-loader.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://github.com/elliottregan/component-loader#readme",
+  "devDependencies": {
+    "@types/bun": "^1.1.0",
+    "typescript": "^5.4.0"
+  }
+}
